@@ -20,9 +20,12 @@ def getAllRules(filename):
 
 
 class Node:
+    instances = []
+
     def __init__(self, data):
         self.data = data
         self.children = []
+        Node.instances.append(self)
 
     def insert(self, data):
         newNode = Node(data)
@@ -35,45 +38,39 @@ class Node:
             child.treeToStr(level+1)
 
 
-def buildTreeFromRules(currentNode, allRules):
+def buildAllNodesFromRules(currentNode, allRules):
     if currentNode.data in allRules:
         for child in allRules[currentNode.data]:
-            childNode = currentNode.insert(child)
-            buildTreeFromRules(childNode, allRules)
+            for x in range(allRules[currentNode.data][child]):
+                childNode = currentNode.insert(child)
+                buildAllNodesFromRules(childNode, allRules)
 
 
-def getAllPathsToGold(node, path=None):
+def getAllPaths(currentNode, path=None):
     allPaths = []
 
     if path is None:
         path = []
 
-    path.append(node.data)
+    path.append(currentNode.data)
 
-    if node.data == 'shiny gold' and len(path) > 1:
+    if currentNode.children:
+        for child in currentNode.children:
+            allPaths.extend(getAllPaths(child, path[:]))
+    else:
         allPaths.append(path)
-        return allPaths
-
-    if node.children:
-        for child in node.children:
-            allPaths.extend(getAllPathsToGold(child, path[:]))
-
     return allPaths
 
 
 def main():
-    allRules = getAllRules('test.txt')
-    allPathsToGold = []
-    # build all trees
-    for outerbag in allRules:
-        root = Node(outerbag)
-        buildTreeFromRules(root, allRules)
-        root.treeToStr()
-        pathsToGoldFromThisRoot = getAllPathsToGold(root)
-        if len(pathsToGoldFromThisRoot) > 0:
-            allPathsToGold.append(outerbag)
+    allRules = getAllRules('input.txt')
 
-    return len(allPathsToGold)
+    # build gold tree
+    root = Node('shiny gold')
+    buildAllNodesFromRules(root, allRules)
+    root.treeToStr()
+
+    return len(Node.instances) - 1
 
 
 if __name__ == "__main__":
